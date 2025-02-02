@@ -78,69 +78,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-    .game-lifelines {
-        display: flex;
-        gap: 15px;
-        justify-content: center;
-        margin: 0 0 20px 0;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-        
-        .lifeline-btn {
-            background: linear-gradient(135deg, #FF9A8B, #FF6B95);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 15px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 107, 149, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .lifeline-btn[disabled] {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: #gray;
-        }
-        
-        .lifeline-btn:not([disabled]):hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(255, 107, 149, 0.4);
-        }
-        
-        .audience-poll-chart {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .poll-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .poll-fill {
-            height: 20px;
-            background: linear-gradient(to right, #4FACFE, #00f2fe);
-            border-radius: 10px;
-            transition: width 1s ease-in-out;
-        }
-        
-        .poll-percentage {
-            min-width: 60px;
-            font-weight: bold;
-        }
-
-
         .score {
             color: #4FACFE;
             font-size: 1.4rem;
@@ -155,20 +92,9 @@
         }
 
         .lives {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            color: rgb(169, 0, 0);
+            color:rgb(169, 0, 0);
             font-size: 1.4rem;
         }
-        
-        .heart-row {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-        
 
         .timer {
             position: relative;
@@ -184,7 +110,7 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background:rgb(224, 226, 227);
+            background: #f1f5f9;
         }
 
         .timer-fill {
@@ -544,12 +470,10 @@
     </style>
 </head>
 <body>
-  
-
     <div class="start-overlay" id="startOverlay">
         <div class="start-container">
             <h1 class="start-title">Magical Picture Quiz! ✨</h1>
-            <p class="start-description">Get ready for an exciting journey through pictures! Test your knowledge, earn Score, and have fun! You'll have 30 seconds for each question.</p>
+            <p class="start-description">Get ready for an exciting journey through pictures! Test your knowledge, earn points, and have fun! You'll have 30 seconds for each question.</p>
             <button class="start-btn" onclick="startGame()">Start Adventure! 🚀</button>
         </div>
     </div>
@@ -563,18 +487,6 @@
                     <div class="timer-circle"></div>
                     <div class="timer-fill"></div>
                     <div class="timer-text" id="timerText">30</div>
-                </div>
-
-                <div class="game-lifelines">
-                    <button class="lifeline-btn" id="fiftyFifty" onclick="useFiftyFifty()">
-                        50:50 🎯
-                    </button>
-                    <button class="lifeline-btn" id="phoneAFriend" onclick="usePhoneAFriend()">
-                        Phone 📞
-                    </button>
-                    <button class="lifeline-btn" id="audiencePoll" onclick="useAudiencePoll()">
-                        Poll 📊
-                    </button>
                 </div>
             </div>
         </div>
@@ -700,31 +612,8 @@
         }
 
         function updateLives() {
-            const livesDisplay = document.getElementById('livesDisplay');
-            livesDisplay.innerHTML = ''; // Clear existing hearts
-            
-            if (lives === 3) {
-                // Create triangle arrangement
-                livesDisplay.innerHTML = `
-                    <div class="heart-row">❤️</div>
-                    <div class="heart-row">❤️❤️</div>
-                `;
-            } else if (lives === 2) {
-                livesDisplay.innerHTML = `
-                    <div class="heart-row">❤️</div>
-                    <div class="heart-row">❤️🖤</div>
-                `;
-            } else if (lives === 1) {
-                livesDisplay.innerHTML = `
-                    <div class="heart-row">❤️</div>
-                    <div class="heart-row">🖤🖤</div>
-                `;
-            } else {
-                livesDisplay.innerHTML = `
-                    <div class="heart-row">🖤</div>
-                    <div class="heart-row">🖤🖤</div>
-                `;
-            }
+            const hearts = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+            document.getElementById('livesDisplay').textContent = hearts;
         }
 
         function showHint() {
@@ -868,18 +757,7 @@
             lives = 3;
             currentQuestionIndex = 0;
             isPaused = false;
-            skippedQuestions = [];     // Reset lifelines
-            lifelineState = {
-                fiftyFifty: true,
-                phoneAFriend: true,
-                audiencePoll: true
-            };
-            
-            document.getElementById('fiftyFifty').disabled = false;
-            document.getElementById('phoneAFriend').disabled = false;
-            document.getElementById('audiencePoll').disabled = false;
-
-            
+            skippedQuestions = [];
             
             document.getElementById('scoreDisplay').textContent = '0';
             document.getElementById('gameCompleteModal').style.display = 'none';
@@ -994,107 +872,6 @@
 
         // Start the game when the page loads
         fetchGameData();
-
-        <!-- Add this JavaScript right before the closing script tag -->
-// Lifeline states
-let lifelineState = {
-    fiftyFifty: true,
-    phoneAFriend: true,
-    audiencePoll: true
-};
-
-function useFiftyFifty() {
-    if (!lifelineState.fiftyFifty || isPaused) return;
-    
-    const buttons = document.querySelectorAll('.option-btn');
-    const wrongAnswers = Array.from(buttons).filter(btn => 
-        btn.textContent !== currentQuestion.correct_answer
-    );
-    
-    // Randomly remove 2 wrong answers
-    shuffleArray(wrongAnswers).slice(0, 2).forEach(btn => {
-        btn.style.display = 'none';
-    });
-    
-    document.getElementById('fiftyFifty').disabled = true;
-    lifelineState.fiftyFifty = false;
-}
-
-function usePhoneAFriend() {
-    if (!lifelineState.phoneAFriend || isPaused) return;
-    
-    const hintText = document.getElementById('hintText');
-    const confidence = Math.random();
-    let message;
-    
-    if (confidence > 0.7) {
-        message = `Friend: I'm pretty sure the answer is "${currentQuestion.correct_answer}"! 🤔`;
-    } else {
-        const randomOption = shuffleArray([...currentQuestion.options])[0];
-        message = `Friend: I'm not entirely sure, but I think it might be "${randomOption}"... 🤔`;
-    }
-    
-    hintText.textContent = message;
-    document.getElementById('phoneAFriend').disabled = true;
-    lifelineState.phoneAFriend = false;
-}
-
-function useAudiencePoll() {
-    if (!lifelineState.audiencePoll || isPaused) return;
-    
-    const hintText = document.getElementById('hintText');
-    hintText.innerHTML = '<div class="audience-poll-chart"></div>';
-    const chartDiv = hintText.querySelector('.audience-poll-chart');
-    
-    const correctIndex = currentQuestion.options.indexOf(currentQuestion.correct_answer);
-    let percentages = Array(currentQuestion.options.length).fill(0);
-    
-    // Generate realistic-looking percentages
-    const correctPercentage = 45 + Math.floor(Math.random() * 30); // 45-75%
-    percentages[correctIndex] = correctPercentage;
-    
-    let remaining = 100 - correctPercentage;
-    for (let i = 0; i < percentages.length; i++) {
-        if (i !== correctIndex) {
-            const share = Math.floor(Math.random() * remaining);
-            percentages[i] = share;
-            remaining -= share;
-        }
-    }
-    
-    // Add any remaining percentage to a random wrong answer
-    if (remaining > 0) {
-        let randomWrongIndex;
-        do {
-            randomWrongIndex = Math.floor(Math.random() * percentages.length);
-        } while (randomWrongIndex === correctIndex);
-        percentages[randomWrongIndex] += remaining;
-    }
-    
-    // Create and animate the poll bars
-    currentQuestion.options.forEach((option, index) => {
-        const pollBar = document.createElement('div');
-        pollBar.className = 'poll-bar';
-        pollBar.innerHTML = `
-            <div class="poll-percentage">${percentages[index]}%</div>
-            <div class="poll-fill" style="width: 0%"></div>
-            <div>${option}</div>
-        `;
-        chartDiv.appendChild(pollBar);
-        
-        // Animate the bar
-        setTimeout(() => {
-            pollBar.querySelector('.poll-fill').style.width = 
-                `${percentages[index] * 2}px`; // multiply by 2 for better visibility
-        }, 100 * index);
-    });
-    
-    document.getElementById('audiencePoll').disabled = true;
-    lifelineState.audiencePoll = false;
-}
-
-         
-
     </script>
 </body>
 </html>
