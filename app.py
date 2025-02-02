@@ -1,13 +1,14 @@
 import os
-from flask import Flask, jsonify, send_file, render_template, request
+from flask import Flask, jsonify, send_file, render_template, request, redirect
 import mysql.connector
 from flask_cors import CORS
-import io
+import boto3
+from botocore.exceptions import ClientError
 
 app = Flask(__name__)
 CORS(app)
 
-# Database configuration
+# Database configuration using environment variables
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'user': os.getenv('DB_USER', 'root'),
@@ -15,6 +16,14 @@ DB_CONFIG = {
     'database': os.getenv('DB_NAME', 'picture_game'),
     'auth_plugin': 'mysql_native_password'
 }
+
+# AWS S3 configuration
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_KEY')
+)
+BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 
 def get_db_connection():
     """Create database connection."""
@@ -36,26 +45,27 @@ def test_connection():
 
 @app.route('/game_image/<int:image_id>')
 def serve_image(image_id):
-    """Serve image from database."""
+    """Serve image from S3."""
     try:
         connection = get_db_connection()
         if not connection:
             return 'Database connection failed', 500
-
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute('SELECT image_data FROM game_questions WHERE id = %s', (image_id,))
-        result = cursor.fetchone()
-
-        if result and result['image_data']:
-            return send_file(
-                io.BytesIO(result['image_data']), 
-                mimetype='image/jpeg', 
-                as_attachment=False,
-                download_name=f"image_{image_id}.jpg"
-            )
         
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute('SELECT s3_key FROM game_questions WHERE id = %s', (image_id,))
+        result = cursor.fetchone()
+        
+        if result and result['s3_key']:
+            try:
+                url = s3_client.generate_presigned_url('get_object',
+                    Params={'Bucket': BUCKET_NAME, 'Key': result['s3_key']},
+                    ExpiresIn=3600
+                )
+                return redirect(url)
+            except ClientError as e:
+                return str(e), 500
+                
         return 'Image not found', 404
-
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -69,9 +79,9 @@ def get_game_data():
         connection = get_db_connection()
         if not connection:
             return jsonify({'error': 'Database connection failed'}), 500
-
+        
         cursor = connection.cursor(dictionary=True)
-        cursor.execute('SELECT id, correct_answer, hint FROM game_questions')
+        cursor.execute('SELECT id, s3_key, correct_answer, hint FROM game_questions')
         questions = cursor.fetchall()
         
         game_data = []
@@ -79,15 +89,20 @@ def get_game_data():
             cursor.execute('SELECT option_text FROM question_options WHERE question_id = %s', (question['id'],))
             options = [option['option_text'] for option in cursor.fetchall()]
             
+            # Generate presigned URL for S3 image
+            image_url = s3_client.generate_presigned_url('get_object',
+                Params={'Bucket': BUCKET_NAME, 'Key': question['s3_key']},
+                ExpiresIn=3600
+            ) if question['s3_key'] else None
+            
             game_data.append({
-                'image_path': f"/game_image/{question['id']}", 
-                'correct_answer': question['correct_answer'], 
-                'options': options, 
+                'image_path': image_url,
+                'correct_answer': question['correct_answer'],
+                'options': options,
                 'hint': question['hint']
             })
         
         return jsonify(game_data)
-
     finally:
         if 'cursor' in locals():
             cursor.close()
@@ -100,6 +115,5 @@ def index():
     return render_template('iiii.html')
 
 if __name__ == "__main__":
-    os.makedirs('templates', exist_ok=True)
-    os.makedirs('static', exist_ok=True)
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
