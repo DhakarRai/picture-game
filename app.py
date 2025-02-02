@@ -9,11 +9,11 @@ CORS(app)
 
 # Database configuration
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Dhakar@2002',
-    'auth_plugin': 'mysql_native_password',
-    'database': 'picture_game'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'Dhakar@2002'),
+    'database': os.getenv('DB_NAME', 'picture_game'),
+    'auth_plugin': 'mysql_native_password'
 }
 
 def get_db_connection():
@@ -102,4 +102,4 @@ def index():
 if __name__ == "__main__":
     os.makedirs('templates', exist_ok=True)
     os.makedirs('static', exist_ok=True)
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
