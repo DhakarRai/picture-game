@@ -8,4 +8,4 @@ itsdangerous==2.1.2
 Jinja2==3.1.2
 blinker==1.7.0
 protobuf==4.21.12
-gunicorn
+gunicorn==23.0.0
